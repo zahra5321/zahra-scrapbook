@@ -1,29 +1,36 @@
 import React, { useState, useEffect } from "react";
-import { verifyAdminKey, isAdminLoggedIn, clearAdminSession } from "../lib/security.js";
-import AdminKeyGenerator from "./AdminKeyGenerator.jsx";
+import {
+  verifyAdminKey,
+  isAdminLoggedIn,
+  clearAdminSession,
+} from "../lib/security.js";
 
 export default function AdminPanel({ open, onClose }) {
-  const [showKeyGenerator, setShowKeyGenerator] = useState(false);
   const [adminKey, setAdminKey] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState("today");
 
-  // Check if already logged in on mount
+  // Check login status whenever panel opens
   useEffect(() => {
-    if (isAdminLoggedIn()) {
-      setIsLoggedIn(true);
+    setIsLoggedIn(isAdminLoggedIn());
+
+    if (!open) {
+      setAdminKey("");
+      setError(null);
+      setLoading(false);
     }
   }, [open]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
+
     setError(null);
     setLoading(true);
 
     try {
-      const isValid = await verifyAdminKey(adminKey);
+      const isValid = await verifyAdminKey(adminKey.trim());
+
       if (isValid) {
         setIsLoggedIn(true);
         setAdminKey("");
@@ -47,11 +54,6 @@ export default function AdminPanel({ open, onClose }) {
     onClose?.();
   };
 
-  const handleKeyGenerated = async (key) => {
-    setIsLoggedIn(true);
-    setShowKeyGenerator(false);
-  };
-
   if (!open) return null;
 
   return (
@@ -63,10 +65,16 @@ export default function AdminPanel({ open, onClose }) {
       />
 
       {/* Admin Panel */}
-      <div className="fixed top-0 right-0 h-full w-full max-w-md bg-[#1A050F] border-l-2 border-[#D4A5A5] shadow-2xl z-50 overflow-y-auto">
+      <div
+        className="fixed top-0 right-0 h-full w-full max-w-md bg-[#1A050F] border-l-2 border-[#D4A5A5] shadow-2xl z-50 overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-[#D4A5A5]">
-          <h1 className="text-2xl font-hand text-[#D4A5A5]">✨ Admin Panel</h1>
+          <h1 className="text-2xl font-hand text-[#D4A5A5]">
+            ✨ Admin Panel
+          </h1>
+
           <button
             onClick={onClose}
             className="text-[#D4A5A5] hover:text-[#E6C5C5] text-3xl"
@@ -84,7 +92,7 @@ export default function AdminPanel({ open, onClose }) {
               </p>
 
               {error && (
-                <div className="bg-red-900 bg-opacity-30 border border-red-500 rounded p-3 text-red-400 text-sm">
+                <div className="bg-red-900/30 border border-red-500 rounded p-3 text-red-400 text-sm">
                   {error}
                 </div>
               )}
@@ -94,32 +102,47 @@ export default function AdminPanel({ open, onClose }) {
                   <label className="block text-[#D4A5A5] text-sm font-bold mb-2">
                     🔐 Admin Key
                   </label>
+
                   <input
                     type="password"
+                    required
                     value={adminKey}
                     onChange={(e) => setAdminKey(e.target.value)}
                     placeholder="Enter your secure key..."
-                    className="w-full bg-[#2A0F1F] border border-[#D4A5A5] text-[#F4EFE6] p-3 rounded placeholder-[#D4A5A5] placeholder-opacity-50"
+                    className="w-full bg-[#2A0F1F] border border-[#D4A5A5] text-[#F4EFE6] p-3 rounded placeholder-[#D4A5A5]/50 focus:outline-none focus:ring-2 focus:ring-[#D4A5A5]"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  disabled={loading || !adminKey}
-                  className="w-full bg-[#D4A5A5] text-[#1A050F] font-bold py-3 rounded hover:bg-[#E6C5C5] transition-colors disabled:opacity-50"
+                  disabled={loading || !adminKey.trim()}
+                  className="w-full bg-[#D4A5A5] text-[#1A050F] font-bold py-3 rounded hover:bg-[#E6C5C5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? "🔄 Verifying..." : "🔓 Unlock Admin"}
                 </button>
               </form>
 
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-[#D4A5A5]" />
-                </div>
-              </div>
+              <div className="border-t border-[#D4A5A5]" />
             </div>
           ) : (
-            <div>Logged in</div>
+            <div className="space-y-5">
+              <h2 className="text-xl font-bold text-[#D4A5A5]">
+                Welcome, Admin 👋
+              </h2>
+
+              <p className="text-[#F4EFE6]">
+                You are successfully authenticated.
+              </p>
+
+              {/* Add your admin tools here */}
+
+              <button
+                onClick={handleLogout}
+                className="w-full bg-red-700 hover:bg-red-800 text-white font-semibold py-3 rounded transition-colors"
+              >
+                Logout
+              </button>
+            </div>
           )}
         </div>
       </div>
