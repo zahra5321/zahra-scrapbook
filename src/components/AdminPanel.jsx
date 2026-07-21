@@ -1,1 +1,129 @@
-import React, { useState, useEffect } from "react";\nimport { verifyAdminKey, isAdminLoggedIn, clearAdminSession } from "../lib/security.js";\nimport AdminKeyGenerator from "./AdminKeyGenerator.jsx";\n\nexport default function AdminPanel({ open, onClose }) {\n  const [showKeyGenerator, setShowKeyGenerator] = useState(false);\n  const [adminKey, setAdminKey] = useState(\"\");\n  const [isLoggedIn, setIsLoggedIn] = useState(false);\n  const [loading, setLoading] = useState(false);\n  const [error, setError] = useState(null);\n  const [activeTab, setActiveTab] = useState(\"today\");\n\n  // Check if already logged in on mount\n  useEffect(() => {\n    if (isAdminLoggedIn()) {\n      setIsLoggedIn(true);\n    }\n  }, [open]);\n\n  const handleLogin = async (e) => {\n    e.preventDefault();\n    setError(null);\n    setLoading(true);\n\n    try {\n      const isValid = await verifyAdminKey(adminKey);\n      if (isValid) {\n        setIsLoggedIn(true);\n        setAdminKey(\"\");\n      } else {\n        setError(\"❌ Invalid admin key. Try again.\");\n        setAdminKey(\"\");\n      }\n    } catch (err) {\n      console.error(\"Login error:\", err);\n      setError(\"❌ An error occurred. Try again.\");\n    } finally {\n      setLoading(false);\n    }\n  };\n\n  const handleLogout = () => {\n    clearAdminSession();\n    setIsLoggedIn(false);\n    setAdminKey(\"\");\n    setError(null);\n    onClose?.();\n  };\n\n  const handleKeyGenerated = async (key) => {\n    setIsLoggedIn(true);\n    setShowKeyGenerator(false);\n  };\n\n  if (!open) return null;\n\n  return (\n    <>\n      {/* Overlay */}\n      <div\n        className=\"fixed inset-0 bg-black bg-opacity-50 z-40\"\n        onClick={onClose}\n      />\n\n      {/* Admin Panel */}\n      <div className=\"fixed top-0 right-0 h-full w-full max-w-md bg-[#1A050F] border-l-2 border-[#D4A5A5] shadow-2xl z-50 overflow-y-auto\">\n        {/* Header */}\n        <div className=\"flex justify-between items-center p-6 border-b border-[#D4A5A5]\">\n          <h1 className=\"text-2xl font-hand text-[#D4A5A5]\">✨ Admin Panel</h1>\n          <button\n            onClick={onClose}\n            className=\"text-[#D4A5A5] hover:text-[#E6C5C5] text-3xl\"\n          >\n            ✕\n          </button>\n        </div>\n\n        {/* Content */}\n        <div className=\"p-6\">\n          {!isLoggedIn ? (\n            // Login Form\n            <div className=\"space-y-6\">\n              <p className=\"text-[#F4EFE6] text-sm\">\n                Enter your admin key to unlock content management.\n              </p>\n\n              {error && (\n                <div className=\"bg-red-900 bg-opacity-30 border border-red-500 rounded p-3 text-red-400 text-sm\">\n                  {error}\n                </div>\n              )}\n\n              <form onSubmit={handleLogin} className=\"space-y-4\">\n                <div>\n                  <label className=\"block text-[#D4A5A5] text-sm font-bold mb-2\">\n                    🔐 Admin Key\n                  </label>\n                  <input\n                    type=\"password\"\n                    value={adminKey}\n                    onChange={(e) => setAdminKey(e.target.value)}\n                    placeholder=\"Enter your secure key...\"\n                    className=\"w-full bg-[#2A0F1F] border border-[#D4A5A5] text-[#F4EFE6] p-3 rounded placeholder-[#D4A5A5] placeholder-opacity-50\"\n                  />\n                </div>\n\n                <button\n                  type=\"submit\"\n                  disabled={loading || !adminKey}\n                  className=\"w-full bg-[#D4A5A5] text-[#1A050F] font-bold py-3 rounded hover:bg-[#E6C5C5] transition-colors disabled:opacity-50\"\n                >\n                  {loading ? \"🔄 Verifying...\" : \"🔓 Unlock Admin\"}\n                </button>\n              </form>\n\n              <div className=\"relative my-6\">\n                <div className=\"absolute inset-0 flex items-center\">\n                  <div className=\"w-full border-t border-[#D4A5A5]\"></div>\n                </div>\n                <div className=\"relative flex justify-center text-sm\">\n                  <span className=\"px-2 bg-[#1A050F] text-[#D4A5A5]\">or</span>\n                </div>\n              </div>\n\n              <button\n                onClick={() => setShowKeyGenerator(true)}\n                className=\"w-full bg-[#2A0F1F] border-2 border-[#D4A5A5] text-[#D4A5A5] font-bold py-3 rounded hover:bg-[#3A1F2F] transition-colors\"\n              >\n                🎲 Generate New Key\n              </button>\n            </div>\n          ) : (\n            // Admin Dashboard\n            <div className=\"space-y-6\">\n              <div className=\"bg-[#2A0F1F] border border-[#D4A5A5] rounded p-4\">\n                <p className=\"text-[#D4A5A5] text-sm font-bold mb-2\">✅ Admin Unlocked</p>\n                <p className=\"text-[#F4EFE6] text-sm\">\n                  You can now manage all content on your scrapbook.\n                </p>\n              </div>\n\n              {/* Tabs */}\n              <div className=\"flex gap-2 border-b border-[#D4A5A5] overflow-x-auto\">\n                {[\n                  { id: \"today\", label: \"📅 Today\" },\n                  { id: \"doodles\", label: \"🎨 Doodles\" },\n                  { id: \"gallery\", label: \"📸 Gallery\" },\n                  { id: \"blog\", label: \"📝 Blog\" },\n                ].map((tab) => (\n                  <button\n                    key={tab.id}\n                    onClick={() => setActiveTab(tab.id)}\n                    className={`px-4 py-2 text-sm font-bold whitespace-nowrap transition-colors ${\n                      activeTab === tab.id\n                        ? \"text-[#D4A5A5] border-b-2 border-[#D4A5A5]\"\n                        : \"text-[#F4EFE6] hover:text-[#D4A5A5]\"\n                    }`}\n                  >\n                    {tab.label}\n                  </button>\n                ))}\n              </div>\n\n              {/* Tab Content Placeholder */}\n              <div className=\"bg-[#2A0F1F] border border-[#D4A5A5] rounded p-4 min-h-[200px]\">\n                <p className=\"text-[#F4EFE6] text-sm\">\n                  📝 {activeTab} content editor coming soon...\n                </p>\n              </div>\n\n              {/* Seed Data Button */}\n              <button className=\"w-full bg-[#2A0F1F] border border-[#D4A5A5] text-[#D4A5A5] py-2 rounded hover:bg-[#3A1F2F] transition-colors\">\n                🌱 Seed Demo Data\n              </button>\n\n              {/* Logout */}\n              <button\n                onClick={handleLogout}\n                className=\"w-full bg-red-900 text-red-200 font-bold py-2 rounded hover:bg-red-800 transition-colors\"\n              >\n                🔒 Logout\n              </button>\n            </div>\n          )}\n        </div>\n      </div>\n\n      {/* Key Generator Modal */}\n      {showKeyGenerator && (\n        <AdminKeyGenerator\n          onKeyGenerated={handleKeyGenerated}\n          onClose={() => setShowKeyGenerator(false)}\n        />\n      )}\n    </>\n  );\n}\n
+import React, { useState, useEffect } from "react";
+import { verifyAdminKey, isAdminLoggedIn, clearAdminSession } from "../lib/security.js";
+import AdminKeyGenerator from "./AdminKeyGenerator.jsx";
+
+export default function AdminPanel({ open, onClose }) {
+  const [showKeyGenerator, setShowKeyGenerator] = useState(false);
+  const [adminKey, setAdminKey] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState("today");
+
+  // Check if already logged in on mount
+  useEffect(() => {
+    if (isAdminLoggedIn()) {
+      setIsLoggedIn(true);
+    }
+  }, [open]);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    try {
+      const isValid = await verifyAdminKey(adminKey);
+      if (isValid) {
+        setIsLoggedIn(true);
+        setAdminKey("");
+      } else {
+        setError("❌ Invalid admin key. Try again.");
+        setAdminKey("");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("❌ An error occurred. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    clearAdminSession();
+    setIsLoggedIn(false);
+    setAdminKey("");
+    setError(null);
+    onClose?.();
+  };
+
+  const handleKeyGenerated = async (key) => {
+    setIsLoggedIn(true);
+    setShowKeyGenerator(false);
+  };
+
+  if (!open) return null;
+
+  return (
+    <>
+      {/* Overlay */}
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50 z-40"
+        onClick={onClose}
+      />
+
+      {/* Admin Panel */}
+      <div className="fixed top-0 right-0 h-full w-full max-w-md bg-[#1A050F] border-l-2 border-[#D4A5A5] shadow-2xl z-50 overflow-y-auto">
+        {/* Header */}
+        <div className="flex justify-between items-center p-6 border-b border-[#D4A5A5]">
+          <h1 className="text-2xl font-hand text-[#D4A5A5]">✨ Admin Panel</h1>
+          <button
+            onClick={onClose}
+            className="text-[#D4A5A5] hover:text-[#E6C5C5] text-3xl"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6">
+          {!isLoggedIn ? (
+            // Login Form
+            <div className="space-y-6">
+              <p className="text-[#F4EFE6] text-sm">
+                Enter your admin key to unlock content management.
+              </p>
+
+              {error && (
+                <div className="bg-red-900 bg-opacity-30 border border-red-500 rounded p-3 text-red-400 text-sm">
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <label className="block text-[#D4A5A5] text-sm font-bold mb-2">
+                    🔐 Admin Key
+                  </label>
+                  <input
+                    type="password"
+                    value={adminKey}
+                    onChange={(e) => setAdminKey(e.target.value)}
+                    placeholder="Enter your secure key..."
+                    className="w-full bg-[#2A0F1F] border border-[#D4A5A5] text-[#F4EFE6] p-3 rounded placeholder-[#D4A5A5] placeholder-opacity-50"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading || !adminKey}
+                  className="w-full bg-[#D4A5A5] text-[#1A050F] font-bold py-3 rounded hover:bg-[#E6C5C5] transition-colors disabled:opacity-50"
+                >
+                  {loading ? "🔄 Verifying..." : "🔓 Unlock Admin"}
+                </button>
+              </form>
+
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-[#D4A5A5]" />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div>Logged in</div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
