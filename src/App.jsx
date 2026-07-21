@@ -12,9 +12,15 @@ export default function App() {
 
   return (
     <Router>
-      <div className="relative min-h-screen bg-[#1A050F] text-[#F4EFE6]" data-testid="app">
+      <div
+        className="relative min-h-screen bg-[#1A050F] text-[#F4EFE6]"
+        data-testid="app"
+      >
         <Nav onAdminClick={() => setAdminOpen(true)} />
-        <AdminPanel open={adminOpen} onClose={() => setAdminOpen(false)} />
+        <AdminPanel
+          open={adminOpen}
+          onClose={() => setAdminOpen(false)}
+        />
 
         <Routes>
           <Route path="/" element={<Home />} />
