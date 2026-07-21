@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Nav from "./components/Nav.js";
+import Nav from "./components/Nav.jsx";
 import AdminPanel from "./components/AdminPanel.jsx";
 import Home from "./pages/Home.jsx";
 import DoodleCorner from "./pages/DoodleCorner.jsx";
@@ -12,15 +12,9 @@ export default function App() {
 
   return (
     <Router>
-      <div
-        className="relative min-h-screen bg-[#1A050F] text-[#F4EFE6]"
-        data-testid="app"
-      >
+      <div className="relative min-h-screen bg-[#1A050F] text-[#F4EFE6]" data-testid="app">
         <Nav onAdminClick={() => setAdminOpen(true)} />
-        <AdminPanel
-          open={adminOpen}
-          onClose={() => setAdminOpen(false)}
-        />
+        <AdminPanel open={adminOpen} onClose={() => setAdminOpen(false)} />
 
         <Routes>
           <Route path="/" element={<Home />} />
