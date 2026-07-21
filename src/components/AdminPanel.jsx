@@ -78,7 +78,6 @@ export default function AdminPanel({ open, onClose }) {
         {/* Content */}
         <div className="p-6">
           {!isLoggedIn ? (
-            // Login Form
             <div className="space-y-6">
               <p className="text-[#F4EFE6] text-sm">
                 Enter your admin key to unlock content management.
