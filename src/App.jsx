@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Nav from "./components/Nav";
+import Nav from "./components/Nav.jsx";
 import AdminPanel from "./components/AdminPanel";
 import Home from "./pages/Home";
 import DoodleCorner from "./pages/DoodleCorner";
